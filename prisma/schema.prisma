@@ -1,0 +1,235 @@
+// نظام إدارة المعاهد الأهلية — مخطط قاعدة البيانات (Prisma + MySQL)
+// Amounts are stored as INTEGERS in the smallest practical unit (IQD dinars, no fils).
+// This avoids floating point errors. All money math is performed server-side.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// ----------------------------------------------------------------------------
+// Enums
+// ----------------------------------------------------------------------------
+
+/// طريقة أجر الأستاذ
+enum TeacherPayType {
+  MONTHLY_SALARY // راتب شهري ثابت
+  ENTITLEMENT // مستحقات: حصة (نسبة) من كل دورة يقدّمها
+}
+
+/// الجهة التي يُخصم منها الخصم
+enum DiscountTarget {
+  INSTITUTE // على المعهد
+  TEACHER // على الأستاذ
+  BOTH // على الاثنين بالتساوي
+}
+
+/// حالة الاشتراك
+enum SubscriptionStatus {
+  ACTIVE // فعّال
+  COMPLETED // مكتمل
+  CANCELLED // ملغى
+}
+
+/// صلاحية المستخدم في النظام
+enum AdminRole {
+  SUPER_ADMIN // مدير عام (كل الصلاحيات)
+  ADMIN // أدمن (صلاحيات محدّدة يختارها المدير العام)
+}
+
+// ----------------------------------------------------------------------------
+// Models
+// ----------------------------------------------------------------------------
+
+/// الأساتذة
+model Teacher {
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String?
+  startDate DateTime // تاريخ المباشرة
+  subject   String // المادة
+
+  /// نوع الأجر: راتب شهري ثابت أو مستحقات (حصة من الدورات)
+  payType       TeacherPayType @default(ENTITLEMENT)
+  /// الراتب الشهري (يُستخدم عند payType = MONTHLY_SALARY)
+  monthlySalary Int            @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  courses      Course[]
+  salaryPayouts SalaryPayout[]
+
+  @@index([name])
+}
+
+/// الدورات
+model Course {
+  id        Int      @id @default(autoincrement())
+  name      String // اسم الكورس
+  grade     String // الصف الدراسي
+  price     Int // سعر الدورة (بالدينار)
+
+  /// نسبة الأستاذ من سعر الدورة (0-100). تُستخدم لأساتذة المستحقات فقط،
+  /// وتكون 0 للأستاذ ذي الراتب الشهري (المعهد يحتفظ بكامل إيراد الدورة).
+  teacherPercent Int @default(0)
+
+  teacherId Int
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscriptionCourses SubscriptionCourse[]
+
+  @@index([teacherId])
+  @@index([name])
+}
+
+/// الطلاب
+model Student {
+  id        Int      @id @default(autoincrement())
+  name      String // اسم الطالب
+  phone     String? // رقم الهاتف
+  birthDate DateTime? // المواليد
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscriptions Subscription[]
+
+  @@index([name])
+}
+
+/// الاشتراكات (اشتراك واحد قد يشمل دورة أو عدة دورات)
+model Subscription {
+  id        Int @id @default(autoincrement())
+  studentId Int
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  totalPrice     Int // مجموع أسعار الدورات المختارة
+  discountAmount Int            @default(0) // مبلغ الخصم
+  discountTarget DiscountTarget @default(INSTITUTE) // جهة الخصم
+  finalPrice     Int // = totalPrice - discountAmount
+  paidAmount     Int            @default(0) // مجموع الأقساط المدفوعة
+  // remainingAmount = finalPrice - paidAmount (يُحسب عند الحاجة)
+
+  status         SubscriptionStatus @default(ACTIVE)
+  lastPaymentDate DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  courses  SubscriptionCourse[]
+  payments Payment[]
+
+  @@index([studentId])
+  @@index([status])
+}
+
+/// جدول الربط بين الاشتراك والدورات/المواد مع تثبيت السعر وقت الاشتراك
+model SubscriptionCourse {
+  id             Int          @id @default(autoincrement())
+  subscriptionId Int
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  /// دورة معرّفة مسبقاً (اختياري). عند غيابها يُستخدم subjectName كمادة مُدخلة يدوياً
+  courseId Int?
+  course   Course? @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  /// اسم المادة عند الإدخال اليدوي (بدون دورة مرتبطة)
+  subjectName String?
+
+  /// نسخة من سعر الدورة/المادة ونسبة الأستاذ وقت الاشتراك حتى لا تتأثر التقارير بتغيّر القيم لاحقاً
+  priceAtSubscription Int
+  teacherPercentAtSub Int @default(0)
+
+  @@index([courseId])
+  @@index([subjectName])
+}
+
+/// مخزن اقتراحات المواد وأسعارها (يُملأ تلقائياً عند إضافتها أول مرة)
+model Subject {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  price     Int      @default(0) // آخر سعر حدّده المدير
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+}
+
+/// الأقساط / استلام قسط
+model Payment {
+  id             Int          @id @default(autoincrement())
+  subscriptionId Int
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  amount      Int // المبلغ المدفوع
+  paymentDate DateTime @default(now())
+  note        String?
+  receiptNo   String   @unique // رقم الوصل التسلسلي
+  createdAt   DateTime @default(now())
+
+  @@index([subscriptionId])
+  @@index([paymentDate])
+}
+
+/// صرف رواتب الأساتذة
+model SalaryPayout {
+  id        Int      @id @default(autoincrement())
+  teacherId Int
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  amount    Int
+  payoutDate DateTime @default(now())
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([teacherId])
+  @@index([payoutDate])
+}
+
+/// المصروفات
+model Expense {
+  id        Int      @id @default(autoincrement())
+  title     String
+  amount    Int
+  category  String
+  date      DateTime @default(now())
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([date])
+  @@index([category])
+}
+
+/// الإيرادات اليدوية (بالإضافة إلى الإيراد المشتق من الأقساط)
+model Income {
+  id        Int      @id @default(autoincrement())
+  title     String
+  amount    Int
+  source    String
+  date      DateTime @default(now())
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([date])
+}
+
+/// مستخدمو النظام
+model Admin {
+  id           Int       @id @default(autoincrement())
+  name         String // الاسم
+  username     String    @unique // اسم المستخدم
+  phone        String? // رقم الهاتف
+  role         AdminRole @default(ADMIN)
+  permissions  String    @default("") // صلاحيات الأدمن مفصولة بفواصل (المدير العام يملك الكل)
+  passwordHash String // كلمة المرور مُخزّنة كتجزئة (scrypt)
+  active       Boolean   @default(true) // مفعّل
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([name])
+}

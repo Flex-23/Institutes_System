@@ -1,0 +1,344 @@
+@import "tailwindcss";
+
+/* ===== نظام إدارة المعاهد — نظام تصميم "الحبر النيلي" (RTL / عربي) ===== */
+
+@theme {
+  --font-sans: var(--font-cairo), "Segoe UI", Tahoma, sans-serif;
+}
+
+/* --------------------------------------------------------------------------
+   الثيمات: فاتح (افتراضي) / داكن (Dark) / ليلي (Night)
+   القيم مُعرَّفة كمتغيّرات CSS ليتبدّل الثيم بتغيير data-theme على <html>.
+   نعيد أيضاً تعيين مقياس slate الافتراضي حتى تتكيّف كل الصفحات تلقائياً.
+   الشريط الجانبي داكن في كل الثيمات (متغيّرات --sidebar-*).
+-------------------------------------------------------------------------- */
+
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  --color-background: #f2f4fb;
+  --color-card: #ffffff;
+  --color-elevated: #ffffff;
+  --color-foreground: #101426;
+  --color-muted: #626e84;
+  --color-border: #e3e7f2;
+  --scrollbar: #c7cede;
+
+  --color-primary: #4f46e5;
+  --color-primary-2: #7c3aed;
+  --color-primary-foreground: #ffffff;
+  --color-primary-soft: #e6e6fb;
+
+  --color-danger: #dc2626;
+  --color-danger-2: #b91c1c;
+  --color-danger-soft: #fee2e2;
+  --color-success: #059669;
+  --color-success-2: #047857;
+  --color-success-soft: #d1fae5;
+  --color-warning: #d97706;
+  --color-warning-soft: #fef3c7;
+  --color-info: #0284c7;
+  --color-info-soft: #e0f2fe;
+
+  /* توهّج خلفية الصفحة */
+  --wash-1: rgba(79, 70, 229, 0.09);
+  --wash-2: rgba(124, 58, 237, 0.07);
+}
+
+/* ===== داكن (Dark) — نيلي ليلي ===== */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-background: #0a0e1d;
+  --color-card: #111731;
+  --color-elevated: #1e2743;
+  --color-foreground: #e8edfa;
+  --color-muted: #94a0bd;
+  --color-border: #232c4a;
+  --scrollbar: #33406333;
+
+  --color-primary: #6366f1;
+  --color-primary-2: #8b5cf6;
+  --color-danger: #ef4444;
+  --color-danger-2: #dc2626;
+  --color-success: #10b981;
+  --color-success-2: #059669;
+  --color-warning: #f59e0b;
+  --color-info: #38bdf8;
+
+  --color-primary-soft: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  --color-danger-soft: color-mix(in srgb, var(--color-danger) 16%, transparent);
+  --color-success-soft: color-mix(in srgb, var(--color-success) 16%, transparent);
+  --color-warning-soft: color-mix(in srgb, var(--color-warning) 16%, transparent);
+  --color-info-soft: color-mix(in srgb, var(--color-info) 16%, transparent);
+
+  --color-slate-50: #171f3a;
+  --color-slate-100: #1d2542;
+  --color-slate-200: #2a3459;
+  --color-slate-300: #3b476e;
+  --color-slate-400: #8894b1;
+  --color-slate-500: #9aa6c2;
+  --color-slate-600: #b9c3d9;
+  --color-slate-700: #d3dbea;
+  --color-slate-800: #e8eef8;
+  --color-slate-900: #f2f6fc;
+
+  --wash-1: rgba(99, 102, 241, 0.1);
+  --wash-2: rgba(139, 92, 246, 0.07);
+
+  --scrollbar: #334063;
+}
+
+/* ===== ليلي (Night) — أسود عميق مريح للعين ===== */
+[data-theme="night"] {
+  color-scheme: dark;
+
+  --color-background: #05070d;
+  --color-card: #0b0f1a;
+  --color-elevated: #1a2136;
+  --color-foreground: #ebf0fb;
+  --color-muted: #8c98b2;
+  --color-border: #1a2137;
+  --scrollbar: #263352;
+
+  --color-primary: #7c83f7;
+  --color-primary-2: #9d6bfa;
+  --color-danger: #f87171;
+  --color-danger-2: #ef4444;
+  --color-success: #34d399;
+  --color-success-2: #10b981;
+  --color-warning: #fbbf24;
+  --color-info: #60a5fa;
+
+  --color-primary-soft: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  --color-danger-soft: color-mix(in srgb, var(--color-danger) 15%, transparent);
+  --color-success-soft: color-mix(in srgb, var(--color-success) 15%, transparent);
+  --color-warning-soft: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  --color-info-soft: color-mix(in srgb, var(--color-info) 15%, transparent);
+
+  --color-slate-50: #111729;
+  --color-slate-100: #182034;
+  --color-slate-200: #253150;
+  --color-slate-300: #394666;
+  --color-slate-400: #8290ab;
+  --color-slate-500: #96a3bd;
+  --color-slate-600: #b5c0d6;
+  --color-slate-700: #d1dae8;
+  --color-slate-800: #e9eff8;
+  --color-slate-900: #f4f8fd;
+
+  --wash-1: rgba(124, 131, 247, 0.08);
+  --wash-2: rgba(157, 107, 250, 0.05);
+}
+
+/* ===== الشريط الجانبي الداكن (كل الثيمات) ===== */
+:root,
+[data-theme="light"],
+[data-theme="dark"],
+[data-theme="night"] {
+  --sidebar-bg: #0c1023;
+  --sidebar-bg-2: #141a3e;
+  --sidebar-fg: #eef0ff;
+  --sidebar-muted: #8d96c2;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-hover: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="night"] {
+  --sidebar-bg: #070910;
+  --sidebar-bg-2: #10142c;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+body {
+  background:
+    radial-gradient(900px 420px at 15% -10%, var(--wash-1), transparent 60%),
+    radial-gradient(700px 380px at 75% -12%, var(--wash-2), transparent 60%),
+    var(--color-background);
+  background-attachment: fixed;
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+
+/* سطح الشريط الجانبي — تدرّج حبري مع توهّج علوي خفيف */
+.sidebar-shell {
+  background:
+    radial-gradient(420px 220px at 80% -60px, rgba(124, 92, 246, 0.22), transparent 65%),
+    linear-gradient(205deg, var(--sidebar-bg-2) 0%, var(--sidebar-bg) 45%);
+}
+
+/* أرقام لاتينية (٠١٢٣) داخل واجهة عربية RTL */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* حركة ظهور ناعمة للنوافذ المنبثقة (النماذج) */
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.animate-modal-in {
+  animation: modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* انزلاق درج التنقّل من اليمين (RTL) على الموبايل */
+@keyframes drawer-in {
+  from {
+    transform: translateX(60px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+.animate-drawer-in {
+  animation: drawer-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+/* --------------------------------------------------------------------------
+   الجداول على الموبايل → بطاقات
+   يعتمد على data-label الذي يضبطه مكوّن Table من نصوص الترويسة.
+   الخلية الأولى تُعرض كعنوان للبطاقة، والبقية كصفوف "تسمية: قيمة".
+-------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  body {
+    /* background-attachment: fixed يسبّب اهتزازاً على المتصفحات المحمولة */
+    background-attachment: scroll;
+  }
+
+  [data-card-table] {
+    overflow-x: visible;
+  }
+  [data-card-table] table {
+    display: block;
+  }
+  [data-card-table] thead {
+    display: none;
+  }
+  [data-card-table] tbody {
+    display: grid;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+  [data-card-table] tbody tr {
+    display: block;
+    border: 1px solid var(--color-border) !important;
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--color-foreground) 2.5%, var(--color-card));
+    padding: 0.375rem 1rem;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
+  }
+  [data-card-table] tbody td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px dashed var(--color-border);
+  }
+  [data-card-table] tbody tr > td:last-child {
+    border-bottom: 0;
+  }
+  [data-card-table] tbody td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-muted);
+  }
+  /* الخلية الأولى = عنوان البطاقة (بلا تسمية) */
+  [data-card-table] tbody td[data-label]:first-child {
+    justify-content: flex-start;
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+  [data-card-table] tbody td[data-label]:first-child::before {
+    content: none;
+  }
+  /* صف الحالة الفارغة (خلية ممتدة) */
+  [data-card-table] tbody td[colspan] {
+    justify-content: center;
+    border-bottom: 0;
+  }
+}
+
+/* شريط تمرير أنيق متوافق مع الثيم */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  filter: brightness(1.15);
+}
+
+/* ===== أزرار تبديل الثيم (داخل الشريط الجانبي الداكن) ===== */
+.theme-btn {
+  color: var(--sidebar-muted);
+  transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.theme-btn:hover {
+  color: var(--sidebar-fg);
+  background: var(--sidebar-hover);
+}
+[data-theme="light"] .theme-btn[data-v="light"],
+[data-theme="dark"] .theme-btn[data-v="dark"],
+[data-theme="night"] .theme-btn[data-v="night"] {
+  background: rgba(255, 255, 255, 0.1);
+  color: #c7d2fe;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+/* ===== تنسيقات الطباعة (وصل الدفع / التقارير) ===== */
+@media print {
+  html {
+    color-scheme: light;
+  }
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+  }
+  .print-area {
+    box-shadow: none !important;
+    border: none !important;
+    background: #ffffff !important;
+  }
+  @page {
+    margin: 1.5cm;
+  }
+}
